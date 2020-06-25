@@ -62,8 +62,8 @@ class TblBookController extends Controller
     public function store(BookRequest $request)
     {
         $file = $request->file('cover');
-        $file_name = $file->getClientOriginalName();
-        $file->move(public_path('/images/cover', $file_name));
+        $file_name = uniqid().'-'.$file->getClientOriginalName();
+        $request->cover->storeAs('cover', $file_name, 'my_upload');
 
         TblBook::create([
             'book_uniq_idx' => $request->bookid,
@@ -95,7 +95,7 @@ class TblBookController extends Controller
         */
         public function edit($id)
         {
-            $book = TblBook::where('idx', $id)->get();
+            $book = TblBook::where('idx', $id)->first();
             $publishers = Publisher::all();
             $owners = ContentOwner::all();
             return view('books.edit', ['publishers' => $publishers, "owners" => $owners, "book" => $book]);
@@ -113,12 +113,11 @@ class TblBookController extends Controller
 
             if($request->hasFile('cover')) {
                 $file = $request->file('cover');
-                $file_name = $file->getClientOriginalName();
-                $file->move(public_path('/images/cover', $file_name));
-                $book[0]["cover_photo"] = $file_name;
+                $file_name = uniqid().'-'.$file->getClientOriginalName();
+                $request->cover->storeAs('cover', $file_name, 'my_upload');
             } else {
-                $book = TblBook::where('idx', $id)->get();
-                $file_name = $book[0]['cover_photo'];
+                $book = TblBook::where('idx', $id)->first();
+                $file_name = $book->cover_photo;
             }
             DB::table('tbl_book')
             ->where('idx', $id)
